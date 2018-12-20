@@ -23,6 +23,7 @@ from models import (
 )
 
 
+from models import AggregatedItem, CommentedEvent, FeedEntry, FollowedEvent, LikedEvent, User
 class CommentsAggregator(AggregatorInterface[CommentedEvent]):
     type = EventType.COMMENTED
 
@@ -31,11 +32,11 @@ class CommentsAggregator(AggregatorInterface[CommentedEvent]):
         self.user_ids: Set[UserId] = set()
         super().__init__(repo)
 
-    def add(self, event):
+    def add(self, event: CommentedEvent) -> None:
         self.events.append(event)
         self.user_ids.add(event.commenter_id)
 
-    def aggregate(self):
+    def aggregate(self) -> List[AggregatedItem]:
         users_by_id = self.repo.get_users_by_ids(self.user_ids)
 
         return [
@@ -56,11 +57,11 @@ class LikesAggregator(AggregatorInterface[LikedEvent]):
         self.user_ids: Set[UserId] = set()
         super().__init__(repo)
 
-    def add(self, event):
+    def add(self, event: LikedEvent) -> None:
         self.events_by_feedentry_id.setdefault(event.feedentry_id, []).append(event)
         self.user_ids.add(event.liker_id)
 
-    def aggregate(self):
+    def aggregate(self) -> List[AggregatedItem]:
         feedentries_by_id = self.repo.get_feed_entries_by_ids(
             self.events_by_feedentry_id.keys()
         )
@@ -75,7 +76,7 @@ class LikesAggregator(AggregatorInterface[LikedEvent]):
             for fid, events in self.events_by_feedentry_id.items()
         ]
 
-    def _describe(self, events, feedentry, users_by_id: Dict[UserId, User]):
+    def _describe(self, events: List[LikedEvent], feedentry: FeedEntry, users_by_id: Dict[UserId, User]) -> str:
         users = [users_by_id[e.liker_id].name for e in events]
         post_name = f'"{feedentry.caption}"'
         if len(users) == 1:
@@ -99,11 +100,11 @@ class FollowersAggregator(AggregatorInterface[FollowedEvent]):
         self.user_ids: Set[UserId] = set()
         super().__init__(repo)
 
-    def add(self, event):
+    def add(self, event: FollowedEvent) -> None:
         self.events.append(event)
         self.user_ids.add(event.follower_id)
 
-    def aggregate(self):
+    def aggregate(self) -> List[AggregatedItem]:
         users_by_id = self.repo.get_users_by_ids(self.user_ids)
 
         return [
@@ -123,7 +124,7 @@ class Inbox:
         self.repo = repo
         self.events = self.repo.get_inbox_events_for_user_id(self.user.id)
 
-    def aggregate(self):
+    def aggregate(self) -> List[AggregatedItem]:
         aggregators: List[AggregatorInterface] = [
             CommentsAggregator(self.repo),
             LikesAggregator(self.repo),
@@ -143,7 +144,7 @@ class Inbox:
 
         return sorted(items, key=attrgetter("published"), reverse=True)
 
-    def summarize(self):
+    def summarize(self) -> str:
         counter = Counter(e.type for e in self.events)
         clauses: List[str] = []
         likes = counter[EventType.LIKED]
@@ -164,5 +165,5 @@ class Inbox:
             combined = f"{initial} and {clauses[-1]}"
         return f"You have {combined}."
 
-    def _pluralize(self, count):
+    def _pluralize(self, count: int) -> str:
         return "" if count == 1 else "s"

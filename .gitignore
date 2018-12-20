@@ -1,6 +1,6 @@
 __pycache__
-.mypy_cache
+.mypy_cache/
+.pytest_cache/
 .coverage
 htmlcov
-*.sqllite3
-
+*.sqlite3
