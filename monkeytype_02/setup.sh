@@ -1,3 +1,8 @@
-conda create -n python_typing python=3.6 anaconda
+export ENV=python_typing
+export CHANNEL=conda-forge
 
-conda install -n python_typing -c conda-forge --yes --file requirements.txt 
+conda create --name $ENV python=3.6  
+
+cd monkeytype_02/demo
+conda install --name $ENV -c $CHANNEL --file requirements.txt --yes 
+
