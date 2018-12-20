@@ -1,0 +1,20 @@
+[
+    {
+        "path": "test_one.py",
+        "line": 4,
+        "func_name": "func",
+        "type_comments": [
+            "(int) -> int"
+        ],
+        "samples": 1
+    },
+    {
+        "path": "test_one.py",
+        "line": 7,
+        "func_name": "test_answer",
+        "type_comments": [
+            "() -> pyannotate_runtime.collect_types.NoReturnType"
+        ],
+        "samples": 1
+    }
+]
